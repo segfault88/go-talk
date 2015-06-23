@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello, websocket</title>
+    <script src="jquery-2.1.1.min.js"></script>
+    <script>
+      $(function() {
+        var $ul = $('#msg-list');
+
+        var ws = new WebSocket("ws://localhost:4000/diffuse");
+        ws.onmessage = function(e) {
+          $('<li>').text(event.data).appendTo($ul);
+        };
+      });
+    </script>
+  </head>
+  <body>
+      <ul id="msg-list" style="font-size: 120%"></ul>
+  </body>
+</html>

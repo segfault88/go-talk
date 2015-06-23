@@ -1,0 +1,227 @@
+Go
+24 Oct 2014
+
+Malcolm Lockyer
+Auckland, NZ
+mlockyer@liveops.com
+http://golang.org/
+
+* Why should you care about Go?
+.image gopher.jpg
+
+There are loads of cool languages!
+
+- Haskell, Erlang
+- Elixir, Rust, Nim...
+
+So why am I interested in Go?
+
+* Motivation for Go
+
+Started as an answer to software problems at Google:
+
+- Multicore processors.
+- Networked systems.
+- Massive computation clusters.
+- Scale: 10⁷ lines of code.
+- Scale: 10³ programmers
+- Scale: 10⁶⁺ machines (design point)
+
+Originally built by people working at Google to solve Google type problems.
+
+* Why Go?
+
+- Lightweight and easy to run! Compiles statically to native code with runtime included.
+- "Batteries included" standard library of idiomatic Go code.
+- Imperative, statically type-checked, dynamically type-safe.
+- The type system is very well designed and gets out of your way. Simple and useful object model.
+- Been designed with a relentless dedication to making things simple, easy to read.
+- Quick to learn. Most programmers will be pretty comfortable after reading "Effective Go".
+- It's safe! Garbage collected, no pointer arithmetic, immune to array overruns etc.
+- Been open source under a BSD license for 4 (nearly 5) years, more than 400 contributers outside Google.
+
+* Why Go? #2
+- It's evolving fast!
+- With Go 1.0 the team committed to *NOT* break your code. This has kept up, and no sign of breaking yet.
+- So it's evolving intelligently.
+- Concurrent to the core. Built around the CSP (communicating sequential processes), erlang or actor style of concurrency.
+- Good tooling: go test is core, gofmt reformats your code (all go code looks the same, no religious wars over format), godoc, race detector, profiler and more.
+- Compiles fast, tests fast, starts fast, executes efficiently. No make files or project files needed.
+- *Great* documentation!
+
+All of this makes Go extremely practical! It's not about programming language research, it's about making the creators programming lives easier.
+
+* Trends
+.image trends.png
+
+It's popular!
+
+* Trends #2
+.image trends_c.png
+( just for fun )
+
+* Go got it's first conferences this year
+
+.image gophercon.png
+.image dotgo.png
+
+* Pretty fast too! (micro benchmarks)
+.image vs_java.png
+
+Don't take the numbers *too* seriously! Go competes well, though.
+
+* Composition
+
+Go is Object Oriented, but not in the usual way.
+
+- No classes (methods may be declared on any type).
+- No subtype inheritance.
+- Instead you compose types together.
+- Interfaces are satisfied implicitly (structural typing).
+
+The result: simple pieces connected by small interfaces.
+
+* Concurrency
+
+- 'Goroutines' are a core language primitive.
+- Essentially these are 'green threads' scheduled to OS threads by the Go runtime.
+- Very lightweight, segmented stacks mean each goroutine starts off as a few KB with a stack that grows if needed. Want hundreds of thousands of goroutines? No problem!
+- Start a goroutine by saying 'go' with something to run.
+- Channels provide type safe and thread safe communication between goroutines, no need for locking/semaphores/etc.
+- Higher order functions supported - channels of channels is no problem!
+- By default channels are like mailboxes that only hold one item. Reads block if there is nothing waiting, writes block if there is something there already.
+- Also support a number of items, so can work as a queue or buffer.
+
+* Do not communicate by sharing memory; instead, share memory by communicating.
+
+* Users
+
+- Vitesse, YouTube's MySQL proxy. Solved their problems with scaling MySQL. Serves all of YouTube's MySQL queries. Months of crash-free and leak-free operation.
+- dl.google.com, re-written in Go.
+- dotCloud (Docker), CoreOS, etcd.
+- SoundCloud.
+- Canonical.
+- Mozilla.
+- Cloudflare.
+- ...
+- Just a couple random examples...
+
+* Let's look at some code!
+
+* Hello, go
+
+.play hello_go.go
+
+* Hello, net
+
+.play hello_net.go
+
+* Interfaces
+
+Hang on! We just used Fprintln to write to a net connection.
+That's because a Fprintln writes to an io.Writer, and net.Conn is an io.Writer.
+
+  fmt.Fprintln(c, "Hello!")
+  
+  func Fprintln(w io.Writer, a ...interface{}) (n int, err error)
+  
+  type Writer interface {
+      Write(p []byte) (n int, err error)
+  }
+  
+  type Conn interface {
+    Read(b []byte) (n int, err error)
+    Write(b []byte) (n int, err error)
+    Close() error
+    // ... some additional methods omitted ...
+  }
+
+
+If a type defines all the methods of an interface, the type satisfies that interface.
+
+* An echo server (what's wrong with this?)
+
+.play echo_server.go
+
+* Go routines
+
+.play goroutines.go
+
+* So, let's make the echo server concurrent
+
+.play concurrent_echo_server.go
+
+* Channels
+
+- make a channel
+
+  chan := make(chan int)
+  
+- send on the channel
+
+  chan <- 5
+
+- read from the channel
+
+  value := <- chan
+
+- read from a bunch of channels
+
+  select {
+  case <-a:
+    // handle message from a
+  case <-b:
+    // handle message from b
+  default:
+    // no messages
+  }
+
+* Channel example
+
+.play channel_example.go
+
+* Chain of gophers
+
+.image chain.jpg
+
+Yes, this is a little bit silly.
+
+* Chain of gophers
+
+.play chain.go /START OMIT/,
+
+* Let's take this to the web!
+
+* Hello, web
+
+.play hello_web.go
+
+* Let's make a file server
+
+.play fileserver.go
+
+* Hello, websockets
+
+.play hello_websocket.go /SP1 OMIT/,/EP1 OMIT/
+
+* Hello, websockets #2
+
+.play hello_websocket.go /SP2 OMIT/,/EP2 OMIT/
+
+* Concurrent prime 'sieve'
+
+.play prime.go /START OMIT/,/END OMIT/
+
+* Summary
+
+In my opinion, Go has a roughly similar difficulty to writing code in Javascript or Python with significantly better:
+- Concurrency and parallelism.
+- Scalability and runtime performance.
+- Resilience - type safety intelligently enforced by the compiler, immune to many mistakes compared to C/C++ and dynamic/weakly typed languages.
+- Readability, concise but simple code, goroutines and channels make concurrent and parallel code easy to write and reason about, no callback 'spaghetti' needed, just about no explicit locking/unlocking is needed.
+- All code should run through gofmt, enforces consistency in style.
+- Pretty nice tools and documentation.
+
+Plus it's easy to learn! Just about any programmer can get 'up to speed' with Go extremely fast.
+
+* Questions?
